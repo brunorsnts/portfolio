@@ -148,9 +148,9 @@ body {
   justify-content: center;
   align-items: center;
   transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-  background: #000; /* Fundo preto para blend funcionar */
-  border-radius: 50%; /* Arredonda as bordas */
-  overflow: hidden;
+  /* Contexto 3D principal */
+  perspective: 1000px;
+  transform-style: preserve-3d;
 }
 
 .avatar-wrapper.centered {
@@ -168,26 +168,40 @@ body {
   height: 400px;
 }
 
-.avatar-glow {
+/* Container isolado para a imagem */
+.avatar-inner {
   position: absolute;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, rgba(59, 130, 246, 0.1) 40%, transparent 70%);
   border-radius: 50%;
-  z-index: 2;
-  pointer-events: none;
-  animation: pulseGlow 4s ease-in-out infinite;
+  overflow: hidden;
+  background: #000;
+  /* Posicionado em Z=0 para interseção 3D */
+  transform: translateZ(0);
 }
 
 .avatar-image {
   position: relative;
-  z-index: 1;
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: contain;
   animation: float 6s ease-in-out infinite;
   filter: drop-shadow(0 0 40px rgba(139, 92, 246, 0.5));
   mix-blend-mode: lighten;
+}
+
+.avatar-glow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, rgba(59, 130, 246, 0.08) 40%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: pulseGlow 4s ease-in-out infinite;
+  /* Glow ligeiramente na frente da imagem para não clipar na órbita */
+  transform: translateZ(1px);
 }
 
 @keyframes float {
@@ -201,6 +215,76 @@ body {
   50% { opacity: 1; transform: scale(1.1); }
   100% { opacity: 0.6; transform: scale(1); }
 }
+
+/* ======= ÓRBITA 3D - LINHA DO EQUADOR ======= */
+.orbit-scene {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.orbit-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  transform-style: preserve-3d;
+  animation: orbitSpin 25s linear infinite;
+}
+
+.orbit-icon {
+  --total: 7;
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  background: rgba(15, 15, 25, 0.95);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: 50%;
+  left: 50%;
+  animation: iconCounterSpin 25s linear infinite;
+  /* O transform inicial é gerenciado pelo keyframe */
+}
+
+.orbit-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Rotação principal da órbita. Inclinada para dar perspectiva isométrica */
+@keyframes orbitSpin {
+  from { transform: rotateX(-15deg) rotateY(0deg); }
+  to { transform: rotateX(-15deg) rotateY(360deg); }
+}
+
+/* Contra-rotação dos ícones para que eles sempre olhem para frente */
+@keyframes iconCounterSpin {
+  from {
+    transform:
+      translate(-50%, -50%)
+      rotateY(calc(var(--i) * (360deg / var(--total))))
+      translateZ(300px)
+      rotateY(calc(var(--i) * (-360deg / var(--total)) - 0deg));
+  }
+  to {
+    transform:
+      translate(-50%, -50%)
+      rotateY(calc(var(--i) * (360deg / var(--total))))
+      translateZ(300px)
+      rotateY(calc(var(--i) * (-360deg / var(--total)) - 360deg));
+  }
+}
+
 
 .about-text {
   position: absolute;
